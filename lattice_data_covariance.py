@@ -27,6 +27,7 @@ def covariance_between_states_L20(energy_cutoff):
 
     check_total_states = 0
     state_file_list = []
+    nP_list = []
 
     for moms in list_of_mom:
         for states in range(max_state_num):
@@ -40,7 +41,56 @@ def covariance_between_states_L20(energy_cutoff):
                 if(avgtemp<energy_cutoff):
                     check_total_states = check_total_states + 1 
                     state_file_list.append(filename)
+                    if(moms=='000_A1m'):
+                        nPx = 0
+                        nPy = 0
+                        nPz = 0
+                        nP_list.append([nPx,nPy,nPz])
+                    elif(moms=='100_A2'):
+                        nPx = 1
+                        nPy = 0
+                        nPz = 0
+                        nP_list.append([nPx,nPy,nPz])
+                    elif(moms=='110_A2'):
+                        nPx = 1
+                        nPy = 1
+                        nPz = 0
+                        nP_list.append([nPx,nPy,nPz])
+                    elif(moms=='111_A2'):
+                        nPx = 1
+                        nPy = 1
+                        nPz = 1
+                        nP_list.append([nPx,nPy,nPz])
+                    elif(moms=='200_A2'):
+                        nPx = 2
+                        nPy = 0
+                        nPz = 0
+                        nP_list.append([nPx,nPy,nPz])    
     
+    state_no = []
+    temp_state_no = 0
+    for i in range(len(state_file_list)):
+        if(i==0):
+            state_no.append(temp_state_no)
+            temp_nPx = nP_list[i][0]
+            temp_nPy = nP_list[i][1]
+            temp_nPz = nP_list[i][2]
+            temp_state_no = temp_state_no + 1 
+        else:
+            current_nPx = nP_list[i][0]
+            current_nPy = nP_list[i][1]
+            current_nPz = nP_list[i][2]
+            if(temp_nPx==current_nPx and temp_nPy==current_nPy and temp_nPz==current_nPz):
+                state_no.append(temp_state_no)
+                temp_state_no = temp_state_no + 1
+            else:
+                temp_state_no = 0
+                state_no.append(temp_state_no)
+                temp_state_no = temp_state_no + 1 
+            
+            temp_nPx = current_nPx
+            temp_nPy = current_nPy
+            temp_nPz = current_nPz
 
     covariance_matrix = np.zeros((check_total_states,check_total_states))
 
@@ -77,16 +127,17 @@ def covariance_between_states_L20(energy_cutoff):
         states_err[i] = err1   
 
 
+    np_state_no = np.array(state_no)
 
-    return states_avg, states_err, covariance_matrix 
+    return states_avg, states_err, nP_list, np_state_no, covariance_matrix 
 
 
-
-st, sterr, cov = covariance_between_states_L20(0.38)
+'''
+st, sterr, nP_list,state_no, cov = covariance_between_states_L20(0.38)
 
 with np.printoptions(precision=6, suppress=True):
     for i in range(len(st)):
-        print(st[i], sterr[i])
+        print(st[i], sterr[i], nP_list[i], state_no[i])
     
 print("=======================")
 
@@ -99,3 +150,8 @@ for i in range(len(st)):
     print('\n')
 #    print(np.asmatrix(cov))
  
+for i in range(5):
+    s = np.linspace(0,1,10)
+
+print(s)
+'''
