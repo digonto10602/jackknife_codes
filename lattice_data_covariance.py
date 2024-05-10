@@ -19,10 +19,10 @@ import jackknife
 #we build the covariance between different states 
 #we consider that all the files have same length
 #we return the states with their errors as well
-def covariance_between_states_L20(energy_cutoff):
+def covariance_between_states_L20(energy_cutoff, list_of_mom):
     path_to_files = '/home/digonto/Codes/Practical_Lattice_v2/3body_quantization/lattice_data/KKpi_interacting_spectrum/Lattice_data/KKpi_L20/L20_data_modified_for_covariance/'
 
-    list_of_mom = ['000_A1m','100_A2','110_A2','111_A2','200_A2']
+    #list_of_mom = ['000_A1m','100_A2','110_A2','111_A2','200_A2']
     max_state_num = 10
 
     check_total_states = 0
