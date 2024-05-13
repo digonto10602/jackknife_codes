@@ -11,8 +11,25 @@ import subprocess
 import math 
 import sys 
 
+threebody_path_ubuntu = '/home/digonto/Codes/Practical_Lattice_v2/3body_quantization/'
+threebody_path_macos = '/Users/digonto/GitHub/3body_quantization/'
+macos_path2 = '/Users/digonto/GitHub/jackknife_codes/'
+ubuntu_path2 = '/home/digonto/Codes/Practical_Lattice_v2/jackknife_codes/'
 
-sys.path.insert(1, '/home/digonto/Codes/Practical_Lattice_v2/jackknife_codes/')
+from sys import platform 
+#print(platform)
+if platform=="linux" or platform=="linux2":
+    print("platform = ",platform)
+    jackpath = ubuntu_path2
+    threebody_path = threebody_path_ubuntu
+elif platform=="darwin":
+    print("platform = ",platform)
+    jackpath = macos_path2
+    threebody_path = threebody_path_macos
+
+sys.path.insert(1, jackpath)
+
+#sys.path.insert(1, '/home/digonto/Codes/Practical_Lattice_v2/jackknife_codes/')
 
 import jackknife 
 
@@ -29,7 +46,7 @@ def Ecmsq_to_Esq(Ecm, P):
 #we consider that all the files have same length
 #we return the states with their errors as well
 def covariance_between_states_L20(energy_cutoff, list_of_mom):
-    path_to_files = '/home/digonto/Codes/Practical_Lattice_v2/3body_quantization/lattice_data/KKpi_interacting_spectrum/Lattice_data/KKpi_L20/L20_data_modified_for_covariance/'
+    path_to_files = threebody_path + '/lattice_data/KKpi_interacting_spectrum/Lattice_data/KKpi_L20/L20_data_modified_for_covariance/'
 
     #list_of_mom = ['000_A1m','100_A2','110_A2','111_A2','200_A2']
     max_state_num = 10
