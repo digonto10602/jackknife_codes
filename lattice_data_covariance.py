@@ -144,7 +144,8 @@ def covariance_between_states_L20(energy_cutoff, list_of_mom):
 
             (temp0, data1) = np.genfromtxt(file1, unpack=True, skip_header=1)
             (temp0, data2) = np.genfromtxt(file2, unpack=True, skip_header=1) 
-
+            #print("file1 = ",file1)
+            #print("file2 = ",file2) 
             nPx1 = nP_list[i][0]
             nPy1 = nP_list[i][1]
             nPz1 = nP_list[i][2]
@@ -170,7 +171,7 @@ def covariance_between_states_L20(energy_cutoff, list_of_mom):
             for k in range(len(resampled_data1)):
                 resampled_data1_ecm[k] = E_to_Ecm(resampled_data1[k],P1)
             for l in range(len(resampled_data2)):
-                resampled_data2_ecm[l] = E_to_Ecm(resampled_data1[l],P1)
+                resampled_data2_ecm[l] = E_to_Ecm(resampled_data2[l],P1)
             
             avg1 = jackknife.jackknife_average(resampled_data1_ecm)
             avg2 = jackknife.jackknife_average(resampled_data2_ecm)
@@ -183,7 +184,7 @@ def covariance_between_states_L20(energy_cutoff, list_of_mom):
 
             sum_res = 0.0
             for k in range(size):
-                sum_res = sum_res + ((resampled_data1[k] - avg1)/err1)*((resampled_data2[k] - avg2)/err2)
+                sum_res = sum_res + ((resampled_data1_ecm[k] - avg1)/err1)*((resampled_data2_ecm[k] - avg2)/err2)
 
             covariance_matrix[i][j] =  ((n-1.0)/n)*sum_res 
 
