@@ -19,11 +19,11 @@ ubuntu_path2 = '/home/digonto/Codes/Practical_Lattice_v2/jackknife_codes/'
 from sys import platform 
 #print(platform)
 if platform=="linux" or platform=="linux2":
-    print("platform = ",platform)
+    #print("platform = ",platform)
     jackpath = ubuntu_path2
     threebody_path = threebody_path_ubuntu
 elif platform=="darwin":
-    print("platform = ",platform)
+    #print("platform = ",platform)
     jackpath = macos_path2
     threebody_path = threebody_path_macos
 
@@ -171,7 +171,7 @@ def covariance_between_states_L20(energy_cutoff, list_of_mom):
             for k in range(len(resampled_data1)):
                 resampled_data1_ecm[k] = E_to_Ecm(resampled_data1[k],P1)
             for l in range(len(resampled_data2)):
-                resampled_data2_ecm[l] = E_to_Ecm(resampled_data2[l],P1)
+                resampled_data2_ecm[l] = E_to_Ecm(resampled_data2[l],P2)
             
             avg1 = jackknife.jackknife_average(resampled_data1_ecm)
             avg2 = jackknife.jackknife_average(resampled_data2_ecm)
@@ -198,6 +198,168 @@ def covariance_between_states_L20(energy_cutoff, list_of_mom):
     np_state_no = np.array(state_no)
 
     return states_avg, states_err, nP_list, np_state_no, covariance_matrix 
+
+def covariance_between_states_szscl21_based(ensemble, Lval, xival, energy_cutoff, list_of_mom, max_state):
+    path_to_files = threebody_path + '/lattice_data/KKpi_interacting_spectrum/twoptvar_analysis/masses/'
+
+    #list_of_mom = ['000_A1m','100_A2','110_A2','111_A2','200_A2']
+    max_state_num = max_state
+
+    check_total_states = 0
+    state_file_list = []
+    nP_list = []
+    
+
+    xi = xival#3.444
+    L = Lval
+    Lbyas = L*xi 
+    pi = math.acos(-1.0) 
+    twopibyLbyas = 2.0*pi/Lbyas 
+
+    for moms in list_of_mom:
+        for states in range(max_state_num):
+            filename = path_to_files + ensemble + '_' + moms + '_state_' + str(states) 
+            #print("checking file = ",filename)
+            if(os.path.exists(filename)):
+                print("found file = ",filename)
+                (temp0, datatemp) = np.genfromtxt(filename, unpack=True, skip_header=1)
+                resampled_datatemp = jackknife.jackknife_resampling(datatemp)
+                avgtemp = jackknife.jackknife_average(resampled_datatemp)
+                if(moms=='000_A1m'):
+                    nPx = 0
+                    nPy = 0
+                    nPz = 0
+                    #nP_list.append([nPx,nPy,nPz])
+                elif(moms=='100_A2'):
+                    nPx = 1
+                    nPy = 0
+                    nPz = 0
+                    #nP_list.append([nPx,nPy,nPz])
+                elif(moms=='110_A2'):
+                    nPx = 1
+                    nPy = 1
+                    nPz = 0
+                    #nP_list.append([nPx,nPy,nPz])
+                elif(moms=='111_A2'):
+                    nPx = 1
+                    nPy = 1
+                    nPz = 1
+                    #nP_list.append([nPx,nPy,nPz])
+                elif(moms=='200_A2'):
+                    nPx = 2
+                    nPy = 0
+                    nPz = 0
+                    #nP_list.append([nPx,nPy,nPz])  
+                Px = twopibyLbyas*nPx 
+                Py = twopibyLbyas*nPy 
+                Pz = twopibyLbyas*nPz 
+                P = np.sqrt(Px*Px + Py*Py + Pz*Pz)
+                avgtemp_Ecm = E_to_Ecm(avgtemp,P)  
+                
+                if(avgtemp_Ecm<energy_cutoff):
+                    check_total_states = check_total_states + 1 
+                    state_file_list.append(filename)
+                    nP_list.append([nPx,nPy,nPz])
+                    
+    
+    state_no = []
+    temp_state_no = 0
+    for i in range(len(state_file_list)):
+        if(i==0):
+            state_no.append(temp_state_no)
+            temp_nPx = nP_list[i][0]
+            temp_nPy = nP_list[i][1]
+            temp_nPz = nP_list[i][2]
+            temp_state_no = temp_state_no + 1 
+        else:
+            current_nPx = nP_list[i][0]
+            current_nPy = nP_list[i][1]
+            current_nPz = nP_list[i][2]
+            if(temp_nPx==current_nPx and temp_nPy==current_nPy and temp_nPz==current_nPz):
+                state_no.append(temp_state_no)
+                temp_state_no = temp_state_no + 1
+            else:
+                temp_state_no = 0
+                state_no.append(temp_state_no)
+                temp_state_no = temp_state_no + 1 
+            
+            temp_nPx = current_nPx
+            temp_nPy = current_nPy
+            temp_nPz = current_nPz
+
+    covariance_matrix = np.zeros((check_total_states,check_total_states))
+
+    correlation_matrix = np.zeros((check_total_states,check_total_states))
+
+    states_avg = np.zeros((check_total_states))
+    states_err = np.zeros((check_total_states)) 
+    L_list = np.zeros((check_total_states)) 
+
+    for i in range(check_total_states):
+        for j in range(check_total_states):
+            file1 = state_file_list[i]
+            file2 = state_file_list[j]
+
+            (temp0, data1) = np.genfromtxt(file1, unpack=True, skip_header=1)
+            (temp0, data2) = np.genfromtxt(file2, unpack=True, skip_header=1) 
+            #print("file1 = ",file1)
+            #print("file2 = ",file2) 
+            nPx1 = nP_list[i][0]
+            nPy1 = nP_list[i][1]
+            nPz1 = nP_list[i][2]
+            Px1 = twopibyLbyas*nPx1 
+            Py1 = twopibyLbyas*nPy1 
+            Pz1 = twopibyLbyas*nPz1 
+            P1 = np.sqrt(Px1*Px1 + Py1*Py1 + Pz1*Pz1)
+            
+            nPx2 = nP_list[j][0]
+            nPy2 = nP_list[j][1]
+            nPz2 = nP_list[j][2]
+            Px2 = twopibyLbyas*nPx2 
+            Py2 = twopibyLbyas*nPy2 
+            Pz2 = twopibyLbyas*nPz2 
+            P2 = np.sqrt(Px2*Px2 + Py2*Py2 + Pz2*Pz2)
+
+            resampled_data1 = jackknife.jackknife_resampling(data1)
+            resampled_data2 = jackknife.jackknife_resampling(data2)
+
+            resampled_data1_ecm = np.zeros((len(resampled_data1)))
+            resampled_data2_ecm = np.zeros((len(resampled_data2)))
+
+            for k in range(len(resampled_data1)):
+                resampled_data1_ecm[k] = E_to_Ecm(resampled_data1[k],P1)
+            for l in range(len(resampled_data2)):
+                resampled_data2_ecm[l] = E_to_Ecm(resampled_data2[l],P2)
+            
+            avg1 = jackknife.jackknife_average(resampled_data1_ecm)
+            avg2 = jackknife.jackknife_average(resampled_data2_ecm)
+
+            err1 = jackknife.jackknife_error(resampled_data1_ecm)
+            err2 = jackknife.jackknife_error(resampled_data2_ecm) 
+
+            size = len(resampled_data1)
+            n = size 
+
+            sum_res = 0.0
+            sum_res1 = 0.0
+            for k in range(size):
+                sum_res = sum_res + ((resampled_data1_ecm[k] - avg1))*((resampled_data2_ecm[k] - avg2))
+                sum_res1 = sum_res1 + ((resampled_data1_ecm[k] - avg1)/err1)*((resampled_data2_ecm[k] - avg2)/err2)
+
+            covariance_matrix[i][j] =  ((n-1.0)/n)*sum_res 
+            correlation_matrix[i][j] =  ((n-1.0)/n)*sum_res1 
+
+        
+
+        
+        states_avg[i] = avg1 
+        states_err[i] = err1   
+        L_list[i] = L
+
+
+    np_state_no = np.array(state_no)
+
+    return states_avg, states_err, nP_list, np_state_no, L_list, covariance_matrix, correlation_matrix 
 
 
 '''
